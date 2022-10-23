@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TileBehaviour : MonoBehaviour
+public class CellBehaviour: MonoBehaviour
 {
     public SpriteRenderer sprite;
     public Color deadColor = Color.white;
@@ -18,18 +18,23 @@ public class TileBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         sprite.color = this.isAlive ? this.liveColor : this.deadColor;
     }
 
-    void OnMouseDown()
+    void OnMouseOver()
     {
-        if (Input.GetKey(KeyCode.LeftControl))
+        if (Input.GetMouseButton(0))
         {
-            this.isAlive = false;
-        }
-        else
-        {
-            this.isAlive = true;
+            if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.LeftCommand))
+            {
+                this.isAlive = false;
+            }
+            else
+            {
+                this.isAlive = true;
+            }
         }
     }
+
 }
