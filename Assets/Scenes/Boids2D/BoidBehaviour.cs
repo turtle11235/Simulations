@@ -7,6 +7,9 @@ public class BoidBehaviour : MonoBehaviour
     public float speed = 10;
     public float turnRadius = 0.1f;
     public float visionRadius = 10f;
+
+    private Vector3 desiredVector;
+    private Vector3 currentVector;
     // Start is called before the first frame update
     void Start()
     {
@@ -18,19 +21,40 @@ public class BoidBehaviour : MonoBehaviour
     {
         Transform[] n = getNeighbors();
         Vector3 s = separationVector(n);
-        Vector3 a = alignmentVector(n);
-        Vector3 c = cohesionVector(n);
-        Vector3 desiredVector = separationVector(n) + alignmentVector(n) + cohesionVector(n);
-        float currentAngle = transform.rotation.eulerAngles.z;
-        float desiredAngle = Vector3.Angle(transform.forward, desiredVector) - currentAngle;
+        //Vector3 a = alignmentVector(n);
+        ////Vector3 c = cohesionVector(n);
+        desiredVector = new(0, 0, 0);
+        desiredVector += s;
+        //desiredVector += a;
+        //desiredVector += c;
+        //Vector3 desiredVector = separationVector(n) + alignmentVector(n) + cohesionVector(n);
+        Vector3 currentVector = AngleToVector(transform.rotation.eulerAngles.z);
 
-        float rotation = desiredAngle > 0 ? Mathf.Min(turnRadius, desiredAngle) : Mathf.Max(-turnRadius, desiredAngle);
+        float desiredRotation = Vector3.SignedAngle(currentVector, desiredVector, new Vector3(1, 0, 0));
+        float rotation = desiredRotation > 0 ? Mathf.Min(turnRadius, desiredRotation) : Mathf.Max(-turnRadius, desiredRotation);
         transform.Rotate(new Vector3(0, 0, rotation));
-        currentAngle = transform.rotation.eulerAngles.z;
+        float currentAngle = transform.rotation.eulerAngles.z;
+        currentVector = AngleToVector(currentAngle);
+        
+        rb.velocity = AngleToVector(currentAngle) * speed;
 
-        float xVelocity = Mathf.Sin(Mathf.Deg2Rad * -currentAngle) * speed;
-        float yVelocity = Mathf.Cos(Mathf.Deg2Rad * -currentAngle) * speed;
-        rb.velocity = new Vector2(xVelocity, yVelocity);
+        
+    }
+
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, visionRadius);
+    }
+
+    float VectorToAngle(Vector3 v)
+    {
+        return Mathf.Asin(v.x) * Mathf.Rad2Deg;
+    }
+
+    Vector3 AngleToVector(float a)
+    {
+        return new Vector3(Mathf.Cos(Mathf.Deg2Rad * a), Mathf.Sin(Mathf.Deg2Rad * a), 0);
     }
 
     Transform[] getNeighbors()
@@ -40,7 +64,7 @@ public class BoidBehaviour : MonoBehaviour
 
     Vector3 separationVector(Transform[] neighbors)
     {
-        Vector3[] positionVectors = neighbors.Select(x => (transform.position - x.position)).ToArray();
+        Vector3[] positionVectors = neighbors.Select(x => transform.position - x.position).ToArray();
         return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc - x);
     }
 
