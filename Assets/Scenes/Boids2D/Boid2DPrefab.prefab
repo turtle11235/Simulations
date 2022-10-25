@@ -49,8 +49,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 2846441393040767177}
   speed: 5
-  turnRadius: 5
+  turnSpeed: 3
   visionRadius: 5
+  separationDistance: 2
 --- !u!212 &1603503301682309098
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -117,9 +118,9 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 0
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 5bc42fb0bb5b12b47b3e6d10041e262b, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
