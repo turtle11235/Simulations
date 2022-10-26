@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1603503301682309098}
   - component: {fileID: 2846441393040767177}
   - component: {fileID: 3918388704923343963}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Boid2DPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -118,7 +118,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
-  m_AngularDrag: 0
+  m_AngularDrag: 1000000
   m_GravityScale: 0
   m_Material: {fileID: 6200000, guid: 5bc42fb0bb5b12b47b3e6d10041e262b, type: 2}
   m_Interpolate: 0

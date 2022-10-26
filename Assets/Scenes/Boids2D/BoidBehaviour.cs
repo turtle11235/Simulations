@@ -10,6 +10,7 @@ public class BoidBehaviour : MonoBehaviour
     public float visionRadius = 10f;
     public float separationDistance = 2f;
 
+    private Vector3 wv;
     private Vector3 sv;
     private Vector3 av;
     private Vector3 cv;
@@ -24,34 +25,35 @@ public class BoidBehaviour : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        currentVector = transform.TransformDirection(Vector3.right);
-        desiredVector = new Vector3(currentVector.x, currentVector.y, currentVector.z);
+        desiredVector = transform.TransformDirection(Vector3.right);
         Transform[] n = getNeighbors();
-        Debug.Log(n.Length + " neighbors");
+        wv = wallAvoidanceVector();
         sv = separationVector(n);
         av = alignmentVector(n);
         cv = cohesionVector(n);
-        desiredVector += sv;
-        desiredVector += av;
-        desiredVector += cv;
-        //Vector3 desiredVector = separationVector(n) + alignmentVector(n) + cohesionVector(n);
+        desiredVector += wv;
+        //desiredVector += sv;
+        //desiredVector += av;
+        //desiredVector += cv;
 
-        float desiredAngle = Vector3.SignedAngle(Vector3.right, desiredVector, Vector3.right);
-        float desiredRotation = desiredAngle - transform.rotation.eulerAngles.z;
-        float rotation = desiredRotation > 0 ? Mathf.Min(turnSpeed, desiredRotation) : Mathf.Max(-turnSpeed, desiredRotation);
+        float desiredRotation = Vector3.SignedAngle(transform.TransformDirection(Vector3.right), desiredVector, Vector3.right);
+        //float desiredRotation = desiredAngle - transform.rotation.eulerAngles.z;
+        float rotation = desiredRotation >= 0 ? Mathf.Min(turnSpeed, desiredRotation) : Mathf.Max(-turnSpeed, desiredRotation);
         transform.Rotate(new Vector3(0, 0, rotation));
-        float currentAngle = transform.rotation.eulerAngles.z;
-        currentVector = AngleToVector(currentAngle);
+        currentVector = transform.TransformDirection(Vector3.right);
+        Debug.Log(desiredRotation + ", " + desiredVector + ", " + currentVector);
         
-        rb.velocity = AngleToVector(currentAngle) * speed;
-
-        
+        rb.velocity = currentVector * speed;
     }
 
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.white;
         Gizmos.DrawWireSphere(transform.position, visionRadius);
+        Gizmos.DrawWireSphere(transform.position, separationDistance);
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawRay(transform.position, wv);
 
         Gizmos.color = Color.red;
         Gizmos.DrawRay(transform.position, sv * 5);
@@ -66,7 +68,7 @@ public class BoidBehaviour : MonoBehaviour
         Gizmos.DrawRay(transform.position, desiredVector);
 
         Gizmos.color = Color.white;
-        Gizmos.DrawRay(transform.position, transform.TransformDirection(Vector3.right) * visionRadius);
+        Gizmos.DrawRay(transform.position, currentVector.normalized * visionRadius);
     }
 
     float VectorToAngle(Vector3 v)
@@ -81,15 +83,35 @@ public class BoidBehaviour : MonoBehaviour
 
     Transform[] getNeighbors()
     {
-        Transform[] allTransforms = Physics2D.OverlapCircleAll(transform.position, visionRadius).Select(x => x.transform).ToArray();
+        Transform[] allTransforms = Physics2D.OverlapCircleAll(transform.position, visionRadius, LayerMask.GetMask("Boid")).Select(x => x.transform).ToArray();
         return allTransforms.Where(x => x.gameObject != transform.gameObject).ToArray();
+    }
+
+    Vector3 wallAvoidanceVector()
+    {
+        //Vector3[] collisionPoints = Physics2D.CircleCastAll(transform.position, visionRadius, Vector3.forward, distance: 0f, layerMask: LayerMask.GetMask("Wall")).Select(x => (Vector3)x.point).ToArray();
+        RaycastHit2D wallHitForward = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.right), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
+        //RaycastHit2D wallHitRight = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.down), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
+        //RaycastHit2D wallHitLeft = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.up), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
+
+        Vector3 hitPoint = wallHitForward.point;
+        Vector3 wallVector = transform.TransformDirection(Vector3.right);
+        if (wallHitForward)
+        {
+            Debug.Log("Found a wall");
+            wallVector = hitPoint - transform.position;
+            wallVector = Vector3.Reflect(wallVector, -wallHitForward.normal);
+            //wallVector.x = -wallVector.x;
+            //wallVector.y = -wallVector.y;
+        }
+        return wallVector;
     }
 
     Vector3 separationVector(Transform[] neighbors)
     {
         Transform[] tooClose = neighbors.Where(x => Mathf.Abs(Vector3.Distance(x.position, transform.position)) < separationDistance).ToArray();
-        Vector3[] positionVectors = tooClose.Select(x => transform.position - x.position).ToArray();
-        return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc + (separationDistance / x.magnitude * x.normalized) );
+        Vector3[] positionVectors = tooClose.Select(x => x.position - transform.position).ToArray();
+        return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc + ((x.magnitude - separationDistance) * x.normalized) );
     }
 
     Vector3 alignmentVector(Transform[] neighbors)
