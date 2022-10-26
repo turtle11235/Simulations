@@ -39,7 +39,7 @@ public class GridBehaviour : MonoBehaviour
                 updateCells();
                 elapsedTime = 0;
                 timer.Stop();
-                Debug.Log("Updated " + (length * length) + " cells in " + timer.ElapsedMilliseconds / 1000 + " seconds");
+                Debug.Log("Updated " + (length * length) + " cells in " + timer.ElapsedMilliseconds / 1000f + " seconds");
             }
         }
         
@@ -57,7 +57,7 @@ public class GridBehaviour : MonoBehaviour
                 GameObject cell = Instantiate(cellPrefab, new Vector3(x*cellLength + startingPos, y*cellLength + startingPos, 0), Quaternion.identity);
                 if (random)
                 {
-                    cell.GetComponent<CellBehaviour>().isAlive = UnityEngine.Random.Range(0, 2) == 1;
+                    cell.GetComponent<CellBehaviour>().isAlive = UnityEngine.Random.Range(0f, 1f) > .5;
                 }
                 cell.transform.localScale = new Vector3(cellLength, cellLength, 1);
                 grid[x, y] = cell;
@@ -123,9 +123,11 @@ public class GridBehaviour : MonoBehaviour
         {
             for (int j = y-1; j <= y+1; j++)
             {
-                if (!(i == x && j == y) && i >= 0 && i < length && j >= 0 && j < length)
+                int row = (i % length + length) % length;
+                int col = (j % length + length) % length;
+                if (!(i == x && j == y))
                 {
-                    GameObject neighbor = grid[i, j];
+                    GameObject neighbor = grid[row, col];
                     neighbors[index] = neighbor;
                 }
                 index++;
