@@ -101,7 +101,6 @@ public class BoidBehaviour : MonoBehaviour
             reflectionVector = hitPoint - transform.position;
             reflectionVector = Vector3.Reflect(reflectionVector, -wallHitForward.normal);
             reflectionVector = reflectionVector.normalized * (separationDistance / wallHitForward.distance);
-
             if (wallHitForward.distance > separationDistance)
             {
                 //reflectionVector += transform.position - wallHitForward.transform.position;
