@@ -36,8 +36,11 @@ public class BoidBehaviour : MonoBehaviour
         //desiredVector += av;
         //desiredVector += cv;
 
-        float desiredRotation = Vector3.SignedAngle(transform.TransformDirection(Vector3.right), desiredVector, Vector3.right);
-        //float desiredRotation = desiredAngle - transform.rotation.eulerAngles.z;
+        float desiredRotation = Vector3.SignedAngle(transform.TransformDirection(Vector3.right), desiredVector, Vector3.forward);
+        if (Mathf.Abs(desiredRotation) > 180)
+        {
+            Debug.Log("angle is bigger than it should be");
+        }
         float rotation = desiredRotation >= 0 ? Mathf.Min(turnSpeed, desiredRotation) : Mathf.Max(-turnSpeed, desiredRotation);
         transform.Rotate(new Vector3(0, 0, rotation));
         currentVector = transform.TransformDirection(Vector3.right);
@@ -89,22 +92,23 @@ public class BoidBehaviour : MonoBehaviour
 
     Vector3 wallAvoidanceVector()
     {
-        //Vector3[] collisionPoints = Physics2D.CircleCastAll(transform.position, visionRadius, Vector3.forward, distance: 0f, layerMask: LayerMask.GetMask("Wall")).Select(x => (Vector3)x.point).ToArray();
         RaycastHit2D wallHitForward = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.right), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
-        //RaycastHit2D wallHitRight = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.down), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
-        //RaycastHit2D wallHitLeft = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.up), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
 
         Vector3 hitPoint = wallHitForward.point;
-        Vector3 wallVector = transform.TransformDirection(Vector3.right);
         if (wallHitForward)
         {
+            Vector3 reflectionVector = transform.TransformDirection(Vector3.right);
             Debug.Log("Found a wall");
-            wallVector = hitPoint - transform.position;
-            wallVector = Vector3.Reflect(wallVector, -wallHitForward.normal);
-            //wallVector.x = -wallVector.x;
-            //wallVector.y = -wallVector.y;
+            reflectionVector = hitPoint - transform.position;
+            reflectionVector = Vector3.Reflect(reflectionVector, -wallHitForward.normal);
+            reflectionVector = reflectionVector.normalized * (separationDistance / wallHitForward.distance);
+            if (wallHitForward.distance > separationDistance)
+            {
+                //reflectionVector += transform.position - wallHitForward.transform.position;
+            }
+            return reflectionVector;
         }
-        return wallVector;
+        return Vector3.zero;
     }
 
     Vector3 separationVector(Transform[] neighbors)
