@@ -15,7 +15,7 @@ public class SpawnBehaviour : MonoBehaviour
         {
             Quaternion rotation = Random.rotation;
             rotation.eulerAngles = new Vector3(0, 0, rotation.eulerAngles.z);
-            Vector3 position = new Vector3(Random.Range(-5f, 5f), Random.Range(-5f, 5f), 0);
+            Vector3 position = new Vector3(Random.Range(-20f, 20f), Random.Range(-20f, 20f), 0);
             boids.Add(Instantiate(boidPrefab, position, rotation));
             Debug.Log("spawned boid");
         }

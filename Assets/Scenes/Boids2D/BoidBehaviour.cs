@@ -31,7 +31,7 @@ public class BoidBehaviour : MonoBehaviour
         sv = separationVector(n);
         av = alignmentVector(n);
         cv = cohesionVector(n);
-        desiredVector += wv;
+        desiredVector = (wv + sv + av + cv) / 4;
         //desiredVector += sv;
         //desiredVector += av;
         //desiredVector += cv;
@@ -44,7 +44,7 @@ public class BoidBehaviour : MonoBehaviour
         float rotation = desiredRotation >= 0 ? Mathf.Min(turnSpeed, desiredRotation) : Mathf.Max(-turnSpeed, desiredRotation);
         transform.Rotate(new Vector3(0, 0, rotation));
         currentVector = transform.TransformDirection(Vector3.right);
-        Debug.Log(desiredRotation + ", " + desiredVector + ", " + currentVector);
+        //Debug.Log(desiredRotation + ", " + desiredVector + ", " + currentVector);
         
         rb.velocity = currentVector * speed;
     }
@@ -92,22 +92,28 @@ public class BoidBehaviour : MonoBehaviour
 
     Vector3 wallAvoidanceVector()
     {
-        RaycastHit2D wallHitForward = Physics2D.Raycast(transform.position, transform.TransformDirection(Vector3.right), distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
+        Vector3 d = transform.TransformDirection(Vector3.right);
+        Vector3 p = transform.position;
 
-        Vector3 hitPoint = wallHitForward.point;
+        Vector3 wallVector = Vector3.zero;
+
+        RaycastHit2D wallHitForward = Physics2D.Raycast(p, d, distance: visionRadius, layerMask: LayerMask.GetMask("Wall"));
         if (wallHitForward)
         {
-            Vector3 reflectionVector = transform.TransformDirection(Vector3.right);
-            reflectionVector = hitPoint - transform.position;
-            reflectionVector = Vector3.Reflect(reflectionVector, -wallHitForward.normal);
-            reflectionVector = reflectionVector.normalized * (separationDistance / wallHitForward.distance);
-            if (wallHitForward.distance > separationDistance)
-            {
-                //reflectionVector += transform.position - wallHitForward.transform.position;
-            }
-            return reflectionVector;
+            Vector3 hitPoint = wallHitForward.point;
+            Vector3 reflectionVector = hitPoint - p;
+            reflectionVector = Vector3.Reflect(reflectionVector, -wallHitForward.normal).normalized;
+            wallVector += reflectionVector;
         }
-        return Vector3.zero;
+
+        Vector3[] wallDirections = Physics2D.OverlapCircleAll(p, visionRadius, layerMask: LayerMask.GetMask("Wall")).Select(x => p - (Vector3)x.ClosestPoint(p)).ToArray();
+        if (wallDirections.Length > 0)
+        {
+            Vector3 separationVector = wallDirections.Aggregate(Vector3.zero, (acc, x) => x.normalized * (visionRadius - x.magnitude)) / wallDirections.Length;
+            wallVector += separationVector;
+        }
+
+        return wallVector;
     }
 
     Vector3 separationVector(Transform[] neighbors)
@@ -127,6 +133,6 @@ public class BoidBehaviour : MonoBehaviour
     Vector3 cohesionVector(Transform[] neighbors)
     {
         Vector3[] positionVectors = neighbors.Select(x => x.position - transform.position).ToArray();
-        return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc + x).normalized;
+        return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc + x).normalized / 10;
     }
 }
