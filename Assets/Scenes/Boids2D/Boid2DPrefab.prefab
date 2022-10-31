@@ -48,8 +48,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 2846441393040767177}
-  speed: 5
-  turnSpeed: 5
+  speed: 10
+  turnSpeed: 10
   visionRadius: 5
   separationDistance: 2
 --- !u!212 &1603503301682309098

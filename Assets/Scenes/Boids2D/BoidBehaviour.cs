@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using UnityEngine;
 
@@ -14,6 +13,7 @@ public class BoidBehaviour : MonoBehaviour
     private Vector3 sv;
     private Vector3 av;
     private Vector3 cv;
+    private Vector3 rv;
     private Vector3 desiredVector;
     private Vector3 currentVector;
     // Start is called before the first frame update
@@ -31,10 +31,8 @@ public class BoidBehaviour : MonoBehaviour
         sv = separationVector(n);
         av = alignmentVector(n);
         cv = cohesionVector(n);
-        desiredVector = (wv + sv + av + cv) / 4;
-        //desiredVector += sv;
-        //desiredVector += av;
-        //desiredVector += cv;
+        rv = randomVector();
+        desiredVector = (wv + sv + av + cv + rv) / 5;
 
         float desiredRotation = Vector3.SignedAngle(transform.TransformDirection(Vector3.right), desiredVector, Vector3.forward);
         if (Mathf.Abs(desiredRotation) > 180)
@@ -134,5 +132,25 @@ public class BoidBehaviour : MonoBehaviour
     {
         Vector3[] positionVectors = neighbors.Select(x => x.position - transform.position).ToArray();
         return positionVectors.Aggregate(new Vector3(0,0,0), (acc, x) => acc + x).normalized / 10;
+    }
+
+    Vector3 randomVector()
+    {
+        return new Vector3(Random.Range(-1, 1), Random.Range(-1, 1)).normalized / 50;
+    }
+
+    private void OnMouseDown()
+    {
+        Camera mainCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
+        Camera followCam = GameObject.FindGameObjectWithTag("FollowCamera").GetComponent<Camera>();
+
+        mainCam.enabled = false;
+        followCam.enabled = true;
+
+        followCam.GetComponent<FollowBehaviour>().follow(transform);
+
+        Debug.Log("Switching to follow camera");
+
+        
     }
 }
