@@ -34,7 +34,10 @@ public class GridManger : MonoBehaviour
 
     void initializeGrid()
     {
-        meshFilter.mesh = mesh = new Mesh();
+        meshFilter.mesh = mesh = new Mesh()
+        {
+            indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+        };
         mesh.name = "Procedural Grid";
 
         cells = new Cell[length, length];
